@@ -84,37 +84,58 @@ data['reward'] = data.apply(calculate_reward, axis=1)
 num_epochs = 20
 batch_size = 64
 
-# Train the model
-history = cnn_model.fit(X_train_cnn, y_train, validation_data=(X_test_cnn, y_test), epochs=num_epochs, batch_size=batch_size, verbose=1)
+# Live plotting setup
+plt.ion()  # Turn on interactive mode
 
-# Evaluate the model
-predictions = cnn_model.predict(X_test_cnn)
-y_pred = np.argmax(predictions, axis=1)
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Test Accuracy: {accuracy:.4f}")
+# Initialize figure
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
 
-# Plot loss and accuracy curves
-plt.figure(figsize=(12, 6))
+# Plot placeholders
+loss_line, = ax1.plot([], [], label='Training Loss')
+val_loss_line, = ax1.plot([], [], label='Validation Loss')
+ax1.set_title('Loss Curve')
+ax1.set_xlabel('Epochs')
+ax1.set_ylabel('Loss')
+ax1.legend()
 
-# Loss curve
-plt.subplot(1, 2, 1)
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.title('Loss Curve')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-
-# Accuracy curve
-plt.subplot(1, 2, 2)
-plt.plot(history.history['accuracy'], label='Training Accuracy')
-plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-plt.title('Accuracy Curve')
-plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.legend()
+acc_line, = ax2.plot([], [], label='Training Accuracy')
+val_acc_line, = ax2.plot([], [], label='Validation Accuracy')
+ax2.set_title('Accuracy Curve')
+ax2.set_xlabel('Epochs')
+ax2.set_ylabel('Accuracy')
+ax2.legend()
 
 plt.tight_layout()
+
+# Train the model with live plotting
+for epoch in range(num_epochs):
+    history = cnn_model.fit(
+        X_train_cnn, y_train,
+        validation_data=(X_test_cnn, y_test),
+        epochs=1,
+        batch_size=batch_size,
+        verbose=1
+    )
+    
+    # Update plots
+    loss_line.set_xdata(range(epoch + 1))
+    loss_line.set_ydata(history.history['loss'])
+    val_loss_line.set_xdata(range(epoch + 1))
+    val_loss_line.set_ydata(history.history['val_loss'])
+    
+    acc_line.set_xdata(range(epoch + 1))
+    acc_line.set_ydata(history.history['accuracy'])
+    val_acc_line.set_xdata(range(epoch + 1))
+    val_acc_line.set_ydata(history.history['val_accuracy'])
+    
+    ax1.relim()
+    ax1.autoscale_view()
+    ax2.relim()
+    ax2.autoscale_view()
+    
+    plt.pause(0.1)  # Pause to refresh the plot
+
+plt.ioff()  # Turn off interactive mode
 plt.show()
 
 # Save the model
